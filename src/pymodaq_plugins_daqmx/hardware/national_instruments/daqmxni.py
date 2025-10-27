@@ -104,12 +104,14 @@ class AI_RTD_Channel(AIChannel):
         self.r_0 = r_0
         assert rtd_type in RTDType
         self.rtd_type = rtd_type
+        # coefficients of the Callendar-Van Dusen Equation (for "CUSTOM" RTD probes) --
         assert type(a_cvd_coeff) in [float, int]
         self.a_cvd_coeff = a_cvd_coeff
         assert type(b_cvd_coeff) in [float, int]
         self.b_cvd_coeff = b_cvd_coeff
         assert type(c_cvd_coeff) in [float, int]
         self.c_cvd_coeff = c_cvd_coeff
+        # -----------------------------------------------------------------------------
         assert current_excit_source in ExcitationSource
         self.current_excit_source = current_excit_source
         assert type(current_excit_val) in [float, int]
