@@ -5,7 +5,7 @@ from pymodaq.utils.logger import set_logger, get_module_name
 from nidaqmx.constants import (AcquisitionType, VoltageUnits, CurrentUnits, CurrentShuntResistorLocation, \
                                 TemperatureUnits, CJCSource, CountDirection, Level, FrequencyUnits, TimeUnits, \
                                 LineGrouping, UsageTypeAI, UsageTypeAO, UsageTypeCI, UsageTypeCO, Edge, \
-                                TerminalConfiguration, ThermocoupleType, ChannelType, RTDType, TemperatureUnits,
+                                TerminalConfiguration, ThermocoupleType, ChannelType, RTDType, ResistanceUnits, TemperatureUnits,
                                ResistanceConfiguration, ExcitationSource)
 
 from nidaqmx.system import System as niSystem
@@ -84,6 +84,18 @@ class AIChannel(AChannel):
         assert termination in TerminalConfiguration
         self.termination = termination
 
+class AIResistanceChannel(AIChannel):
+    def __init__(self, units=ResistanceUnits.OHMS, resistance_config=ResistanceConfiguration.TWO_WIRE,
+                 current_excit_source=ExcitationSource.INTERNAL, current_excit_val=0.001, **kwargs):
+        super().__init__(**kwargs)
+        assert units in ResistanceUnits
+        self.units = units
+        assert resistance_config in ResistanceConfiguration
+        self.resistance_config = resistance_config
+        assert current_excit_source in ExcitationSource
+        self.current_excit_source = current_excit_source
+        assert type(current_excit_val) in [float, int]
+        self.current_excit_val = current_excit_val
 
 class AIThermoChannel(AIChannel):
     def __init__(self, thermo_type=ThermocoupleType.K, **kwargs):
@@ -94,7 +106,7 @@ class AIThermoChannel(AIChannel):
 class AI_RTD_Channel(AIChannel):
     def __init__(self, units = TemperatureUnits.DEG_C, resistance_config=ResistanceConfiguration.TWO_WIRE, r_0=float(100),
                  rtd_type=RTDType.PT_3750, a_cvd_coeff=float(0), b_cvd_coeff=float(0), c_cvd_coeff=float(0),
-                    current_excit_source = ExcitationSource.INTERNAL, current_excit_val = 0.01, **kwargs):
+                    current_excit_source = ExcitationSource.INTERNAL, current_excit_val = 0.001, **kwargs):
         super().__init__(**kwargs)
         assert units in TemperatureUnits
         self.units = units
