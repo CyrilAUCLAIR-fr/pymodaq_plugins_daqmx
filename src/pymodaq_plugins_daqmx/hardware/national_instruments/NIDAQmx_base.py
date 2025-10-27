@@ -4,7 +4,7 @@ from pymodaq_utils.logger import set_logger, get_module_name
 from pymodaq_gui.parameter import Parameter
 from pymodaq_gui.parameter.pymodaq_ptypes import registerParameterType, GroupParameter
 from pymodaq_plugins_daqmx.hardware.national_instruments.daqmxni import (NIDAQmx, Edge, ChannelType, ClockSettings, \
-    AIChannel, AIThermoChannel, AOChannel, CIChannel, COChannel, DOChannel, DIChannel, UsageTypeAI, UsageTypeAO, \
+    AIChannel, AIResistanceChannel, AIThermoChannel, AOChannel, CIChannel, COChannel, DOChannel, DIChannel, UsageTypeAI, UsageTypeAO, \
     ThermocoupleType, TerminalConfiguration, TriggerSettings,
     RTDType, TemperatureUnits, ResistanceConfiguration, ExcitationSource , AI_RTD_Channel,
     ResistanceUnits)
@@ -466,6 +466,23 @@ class DAQ_NIDAQmx_base:
                                               value_min=channel['current_settings', 'curr_min'],
                                               value_max=channel['current_settings', 'curr_max'],
                                               termination=TerminalConfiguration[channel['termination']], ))
+                elif analog_type == UsageTypeAI.RESISTANCE:
+                    channels.append(AIResistanceChannel(name=channel.opts['title'],
+                                                        source=source, analog_type=analog_type,
+                                                        value_min=channel['resistance_settings', 'min_val'],
+                                                        value_max=channel['resistance_settings', 'max_val'],
+                                                        units=ResistanceUnits[
+                                                            channel['resistance_settings', 'units']],
+                                                        custom_scale_name=
+                                                            channel['resistance_settings', 'custom_scale_name'],
+                                                        resistance_config=
+                                                        ResistanceConfiguration[
+                                                            channel['resistance_settings', 'resistance_config']],
+                                                        current_excit_source=ExcitationSource[
+                                                            channel['resistance_settings', 'current_excit_source']],
+                                                        current_excit_val=
+                                                            channel['resistance_settings', 'current_excit_val'],
+                                                            ))
                 elif analog_type == UsageTypeAI.TEMPERATURE_THERMOCOUPLE:
                     channels.append(AIThermoChannel(name=channel.opts['title'],
                                                     source=source, analog_type=analog_type,

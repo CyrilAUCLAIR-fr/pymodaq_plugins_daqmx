@@ -85,19 +85,19 @@ class AIChannel(AChannel):
         self.termination = termination
 
 class AIResistanceChannel(AIChannel):
-    def __init__(self, units=ResistanceUnits.OHMS, resistance_config=ResistanceConfiguration.TWO_WIRE,
-                 current_excit_source=ExcitationSource.INTERNAL, current_excit_val=0.001, custom_scale_name="", **kwargs):
+    def __init__(self, units=ResistanceUnits.OHMS, custom_scale_name="", resistance_config=ResistanceConfiguration.TWO_WIRE,
+                 current_excit_source=ExcitationSource.INTERNAL, current_excit_val=0.001, **kwargs):
         super().__init__(**kwargs)
         assert units in ResistanceUnits
         self.units = units
+        assert type(custom_scale_name) == str
+        self.custom_scale_name = custom_scale_name
         assert resistance_config in ResistanceConfiguration
         self.resistance_config = resistance_config
         assert current_excit_source in ExcitationSource
         self.current_excit_source = current_excit_source
         assert type(current_excit_val) in [float, int]
         self.current_excit_val = current_excit_val
-        assert type(custom_scale_name) == str
-        self.custom_scale_name = custom_scale_name
 
 
 class AIThermoChannel(AIChannel):
@@ -460,7 +460,17 @@ class NIDAQmx:
                                                                        CurrentShuntResistorLocation.INTERNAL,
                                                                        0.,
                                                                        "")
-
+                        elif channel.analog_type == UsageTypeAI.RESISTANCE:
+                            self._task.ai_channels.add_ai_resistance_chan(channel.name,
+                                                                          "",
+                                                                          channel.value_min,
+                                                                          channel.value_max,
+                                                                          units=channel.units,
+                                                                          custom_scale_name=channel.custom_scale_name,
+                                                                          resistance_config=channel.resistance_config,
+                                                                          current_excit_source=
+                                                                          channel.current_excit_source,
+                                                                          current_excit_val=channel.current_excit_val)
                         elif channel.analog_type == UsageTypeAI.TEMPERATURE_THERMOCOUPLE:
                             self._task.ai_channels.add_ai_thrmcpl_chan(channel.name,
                                                                        "",
