@@ -3,9 +3,11 @@ from qtpy.QtCore import Signal
 from pymodaq_utils.logger import set_logger, get_module_name
 from pymodaq_gui.parameter import Parameter
 from pymodaq_gui.parameter.pymodaq_ptypes import registerParameterType, GroupParameter
-from pymodaq_plugins_daqmx.hardware.national_instruments.daqmxni import NIDAQmx, Edge, ChannelType, ClockSettings, \
+from pymodaq_plugins_daqmx.hardware.national_instruments.daqmxni import (NIDAQmx, Edge, ChannelType, ClockSettings, \
     AIChannel, AIThermoChannel, AOChannel, CIChannel, COChannel, DOChannel, DIChannel, UsageTypeAI, UsageTypeAO, \
-    ThermocoupleType, TerminalConfiguration, TriggerSettings, RTDType, TemperatureUnits, ResistanceConfiguration, ExcitationSource , AI_RTD_Channel
+    ThermocoupleType, TerminalConfiguration, TriggerSettings,
+    RTDType, TemperatureUnits, ResistanceConfiguration, ExcitationSource , AI_RTD_Channel,
+    ResistanceUnits)
 
 
 logger = set_logger(get_module_name(__file__))
@@ -35,6 +37,21 @@ class ScalableGroupAI(GroupParameter):
                   {'title': 'Current Min:', 'name': 'curr_min', 'type': 'float', 'value': -1, 'suffix': 'A'},
                   {'title': 'Current Max:', 'name': 'curr_max', 'type': 'float', 'value': 1, 'suffix': 'A'},
               ]},
+              {'title': 'RESISTANCE:', 'name': 'resistance_settings', 'type': 'group', 'visible': False,
+               'children': [
+                   {'title': 'Min. value in:', 'name': 'min_value_in', 'type': 'float', 'value': '100'},
+                   {'title': 'Max. value in:', 'name': 'max_value_in', 'type': 'float', 'value': '1000'},
+                   {'title': 'Unit:', 'name': 'units', 'type': 'list',
+                    'limits': [resistance_unit.name for resistance_unit in ResistanceUnits],
+                    'value': ResistanceUnits.OHMS},
+                   {'title': 'Resistance config.:', 'name': 'resistance_config', 'type': 'list',
+                    'limits': [rc.name for rc in ResistanceConfiguration],
+                    'value': ResistanceConfiguration.TWO_WIRE.name},
+                   {'title': 'Curr. excit. src:', 'name': 'current_excit_src', 'type': 'list',
+                    'limits': [excit_src.name for excit_src in ExcitationSource],
+                    'value': ExcitationSource.INTERNAL.name},
+                   {'title': 'Iex value:', 'name': 'i_ex_value', 'type': 'float', 'value': 0.00100, 'suffix': 'A'},
+               ]},
               {'title': 'TEMPERATURE_THERMOCOUPLE:', 'name': 'thermoc_settings', 'type': 'group', 'visible': False, 'children': [
                   {'title': 'Thc. type:', 'name': 'thermoc_type', 'type': 'list',
                    'limits': [Th.name for Th in ThermocoupleType], 'value': 'K'},
@@ -394,6 +411,7 @@ class DAQ_NIDAQmx_base:
         elif param.name() == 'ai_type':
             param.parent().child('voltage_settings').show(param.value() == UsageTypeAI.VOLTAGE.name)
             param.parent().child('current_settings').show(param.value() == UsageTypeAI.CURRENT.name)
+            param.parent().child('resistance_settings').show(param.value() == UsageTypeAI.RESISTANCE.name)
             param.parent().child('thermoc_settings').show(param.value() == UsageTypeAI.TEMPERATURE_THERMOCOUPLE.name)
             param.parent().child('rtd_settings').show(param.value() == UsageTypeAI.TEMPERATURE_RTD.name)
 

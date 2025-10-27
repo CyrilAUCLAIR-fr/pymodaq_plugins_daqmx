@@ -86,7 +86,7 @@ class AIChannel(AChannel):
 
 class AIResistanceChannel(AIChannel):
     def __init__(self, units=ResistanceUnits.OHMS, resistance_config=ResistanceConfiguration.TWO_WIRE,
-                 current_excit_source=ExcitationSource.INTERNAL, current_excit_val=0.001, **kwargs):
+                 current_excit_source=ExcitationSource.INTERNAL, current_excit_val=0.001, custom_scale_name="", **kwargs):
         super().__init__(**kwargs)
         assert units in ResistanceUnits
         self.units = units
@@ -96,6 +96,9 @@ class AIResistanceChannel(AIChannel):
         self.current_excit_source = current_excit_source
         assert type(current_excit_val) in [float, int]
         self.current_excit_val = current_excit_val
+        assert type(custom_scale_name) == str
+        self.custom_scale_name = custom_scale_name
+
 
 class AIThermoChannel(AIChannel):
     def __init__(self, thermo_type=ThermocoupleType.K, **kwargs):
