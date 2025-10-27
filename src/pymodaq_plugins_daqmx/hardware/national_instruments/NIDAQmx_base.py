@@ -39,18 +39,21 @@ class ScalableGroupAI(GroupParameter):
               ]},
               {'title': 'RESISTANCE:', 'name': 'resistance_settings', 'type': 'group', 'visible': False,
                'children': [
-                   {'title': 'Min. value in:', 'name': 'min_value_in', 'type': 'float', 'value': '100'},
-                   {'title': 'Max. value in:', 'name': 'max_value_in', 'type': 'float', 'value': '1000'},
+                   {'title': 'Min. value in:', 'name': 'min_val', 'type': 'float', 'value': '100'},
+                   {'title': 'Max. value in:', 'name': 'max_val', 'type': 'float', 'value': '1000'},
                    {'title': 'Unit:', 'name': 'units', 'type': 'list',
                     'limits': [resistance_unit.name for resistance_unit in ResistanceUnits],
                     'value': ResistanceUnits.OHMS},
+                   {'title': 'Cust. scale name:', 'name': 'custom_scale_name',
+                    'type': 'str', 'visible': False, 'value': ''},
                    {'title': 'Resistance config.:', 'name': 'resistance_config', 'type': 'list',
                     'limits': [rc.name for rc in ResistanceConfiguration],
                     'value': ResistanceConfiguration.TWO_WIRE.name},
-                   {'title': 'Curr. excit. src:', 'name': 'current_excit_src', 'type': 'list',
+                   {'title': 'Curr. excit. src:', 'name': 'current_excit_source', 'type': 'list',
                     'limits': [excit_src.name for excit_src in ExcitationSource],
                     'value': ExcitationSource.INTERNAL.name},
-                   {'title': 'Iex value:', 'name': 'i_ex_value', 'type': 'float', 'value': 0.00100, 'suffix': 'A'},
+                   {'title': 'Iex value:', 'name': 'current_excit_val',
+                    'type': 'float', 'value': 0.00100, 'suffix': 'A'},
                ]},
               {'title': 'TEMPERATURE_THERMOCOUPLE:', 'name': 'thermoc_settings', 'type': 'group', 'visible': False, 'children': [
                   {'title': 'Thc. type:', 'name': 'thermoc_type', 'type': 'list',
@@ -417,6 +420,10 @@ class DAQ_NIDAQmx_base:
 
         elif param.name() == 'rtd_type':
             param.parent().child('c-vd_coeff.').show(param.value() == RTDType.CUSTOM.name)
+
+        elif param.name() == 'units' and param.parent().name() == 'resistance_settings':
+            # print(" 'units' param parent = " + str(param.parent().name()))
+            param.parent().child('custom_scale_name').show(param.value() == ResistanceUnits.FROM_CUSTOM_SCALE.name)
 
         elif param.name() == 'ao_type':
             param.parent().child('voltage_settings').show(param.value() == UsageTypeAI.VOLTAGE.name)
