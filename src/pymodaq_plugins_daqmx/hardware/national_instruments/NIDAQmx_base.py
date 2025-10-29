@@ -1,3 +1,4 @@
+import nidaqmx.system
 from qtpy import QtWidgets
 from qtpy.QtCore import Signal
 from pymodaq_utils.logger import set_logger, get_module_name
@@ -45,7 +46,8 @@ class ScalableGroupAI(GroupParameter):
                     'limits': [resistance_unit.name for resistance_unit in ResistanceUnits],
                     'value': ResistanceUnits.OHMS},
                    {'title': 'Cust. scale name:', 'name': 'custom_scale_name',
-                    'type': 'str', 'visible': False, 'value': ''},
+                    'type': 'list', 'limits': [sc_name for sc_name in nidaqmx.system.System.local().scales.scale_names],
+                    'visible': False, 'value': ''},
                    {'title': 'Resistance config.:', 'name': 'resistance_config', 'type': 'list',
                     'limits': [rc.name for rc in ResistanceConfiguration],
                     'value': ResistanceConfiguration.TWO_WIRE.name},
