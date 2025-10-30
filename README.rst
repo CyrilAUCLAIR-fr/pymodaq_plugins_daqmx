@@ -51,7 +51,7 @@ At this point (10/2025), it supports Analog measurement of currents, voltages an
 
 Tests have been running with the following devices:
     * Chassis NI cDAQ-9174 & NI USB-9162
-    * NI modules 9211, 9205 & 9217 (for RTD measurements)
+    * NI modules 9211, 9205 & 9217
 
 Acquisition channels can ge generated directly running the viewer, but it is also possible to load channels from the configuration file config_daqmx.toml clicking on "load configuration" in the parameter tree.
 
