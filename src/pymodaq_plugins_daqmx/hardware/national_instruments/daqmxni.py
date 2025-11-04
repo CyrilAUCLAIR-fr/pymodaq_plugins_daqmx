@@ -341,6 +341,23 @@ class NIDAQmx:
                                                                    value_max=float(ai[ch].get("value_max")),
                                                                    termination=term,
                                                                    ))
+                                elif analog_type == UsageTypeAI.RESISTANCE:
+                                    units = ResistanceUnits[ai[ch].get("units")]
+                                    current_excit_source = ExcitationSource[ai[ch].get("current_excit_source")]
+                                    resistance_config = ResistanceConfiguration[ai[ch].get('resistance_config')]
+                                    viewer.config_channels.append(AIResistanceChannel
+                                                                  (name=name,
+                                                                   source=source,
+                                                                   analog_type=analog_type,
+                                                                   value_min=float(ai[ch].get("value_min")),
+                                                                   value_max=float(ai[ch].get("value_max")),
+                                                                   units=units,
+                                                                   custom_scale_name=ai[ch].get("custom_scale_name"),
+                                                                   resistance_config=resistance_config,
+                                                                   current_excit_source=current_excit_source,
+                                                                   current_excit_val=
+                                                                        float(ai[ch].get("current_excit_val"))
+                                                                   ))
                                 elif analog_type == UsageTypeAI.TEMPERATURE_THERMOCOUPLE:
                                     th = ThermocoupleType[ai[ch].get("thermo_type")]
                                     viewer.config_channels.append(AIThermoChannel

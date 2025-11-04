@@ -3,7 +3,7 @@ import numpy as np
 import traceback
 from .daqmxni import NIDAQmx, niDevice
 from pymodaq_plugins_daqmx.hardware.national_instruments.NIDAQmx_base import DAQ_NIDAQmx_base, TerminalConfiguration, \
-    UsageTypeAI, ChannelType,RTDType
+    UsageTypeAI, ChannelType,RTDType, ResistanceUnits
 from pymodaq.control_modules.viewer_utility_classes import DAQ_Viewer_base, comon_parameters as viewer_params
 from pymodaq.utils.daq_utils import ThreadCommand
 from pymodaq.utils.data import DataFromPlugins, DataToExport
@@ -131,6 +131,7 @@ class DAQ_NIDAQmx_Viewer(DAQ_Viewer_base, DAQ_NIDAQmx_base):
                     ch_par = [a for a in self.settings.child('ai_channels').childs if a.opts['title'] == ch.name][0]
                     ch_par.child("voltage_settings").show(ch.analog_type == UsageTypeAI.VOLTAGE)
                     ch_par.child("current_settings").show(ch.analog_type == UsageTypeAI.CURRENT)
+                    ch_par.child("resistance_settings").show(ch.analog_type == UsageTypeAI.RESISTANCE)
                     ch_par.child("thermoc_settings").show(ch.analog_type == UsageTypeAI.TEMPERATURE_THERMOCOUPLE)
                     ch_par.child("rtd_settings").show(ch.analog_type == UsageTypeAI.TEMPERATURE_RTD)
                     match ch.analog_type:
@@ -154,6 +155,25 @@ class DAQ_NIDAQmx_Viewer(DAQ_Viewer_base, DAQ_NIDAQmx_base):
                                 ch.value_max)
                             self.settings.child("ai_channels", ch_par.opts['name'], "termination").setValue(
                                 ch.termination.name)
+                        case UsageTypeAI.RESISTANCE:
+                            (ch_par.child("resistance_settings", "custom_scale_name").
+                             show(ch.units == ResistanceUnits.FROM_CUSTOM_SCALE))
+                            self.settings.child("ai_channels", ch_par.opts['name'], "ai_type").setValue(
+                                "RESISTANCE")
+                            self.settings.child("ai_channels", ch_par.opts['name'], "resistance_settings",
+                                                "min_val").setValue(ch.value_min)
+                            self.settings.child("ai_channels", ch_par.opts['name'], "resistance_settings",
+                                                "max_val").setValue(ch.value_max)
+                            self.settings.child("ai_channels", ch_par.opts['name'], "resistance_settings",
+                                                "units").setValue(ch.units.name)
+                            self.settings.child("ai_channels", ch_par.opts['name'], "resistance_settings",
+                                                "custom_scale_name").setValue(ch.custom_scale_name)
+                            self.settings.child("ai_channels", ch_par.opts['name'], "resistance_settings",
+                                                "resistance_config").setValue(ch.resistance_config.name)
+                            self.settings.child("ai_channels", ch_par.opts['name'], "resistance_settings",
+                                                "current_excit_source").setValue(ch.current_excit_source.name),
+                            self.settings.child("ai_channels", ch_par.opts['name'], "resistance_settings",
+                                                "current_excit_val").setValue(ch.current_excit_val)
                         case UsageTypeAI.TEMPERATURE_THERMOCOUPLE:
                             self.settings.child("ai_channels", ch_par.opts['name'], "ai_type").setValue(
                                 "TEMPERATURE_THERMOCOUPLE")

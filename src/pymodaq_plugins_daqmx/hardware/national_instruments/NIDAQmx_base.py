@@ -424,7 +424,6 @@ class DAQ_NIDAQmx_base:
             param.parent().child('c-vd_coeff.').show(param.value() == RTDType.CUSTOM.name)
 
         elif param.name() == 'units' and param.parent().name() == 'resistance_settings':
-            # print(" 'units' param parent = " + str(param.parent().name()))
             param.parent().child('custom_scale_name').show(param.value() == ResistanceUnits.FROM_CUSTOM_SCALE.name)
 
         elif param.name() == 'ao_type':
