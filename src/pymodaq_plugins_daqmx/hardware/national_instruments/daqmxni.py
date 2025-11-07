@@ -665,6 +665,10 @@ class NIDAQmx:
         return niSystem.local().devices[device].ai_current_rngs[-2:]  # todo self.devices[device].ai_current_rngs
 
     @classmethod
+    def getAIResistanceRange(cls, device='Dev1'):
+        return niSystem.local().devices[device].ai_resistance_rngs
+
+    @classmethod
     def getAOVoltageRange(cls, device='Dev1'):
         return niSystem.local().devices[device].ao_voltage_rngs[-2:]  # todo self.devices[device].ao_voltage_rngs
 

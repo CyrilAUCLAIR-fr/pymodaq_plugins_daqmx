@@ -347,6 +347,26 @@ class DAQ_NIDAQmx_base:
         if param.name() == 'NIDAQ_devices':
             self.controller.update_NIDAQ_channels()
 
+        def set_boundary_resist_expected_values_to_device_ranges(ai_channel_param):
+            """
+                Set the values of the PyQtGraph parameters relative to the minimum and maximum values
+                the user expect to measure to the input resistance ranges, in ohms, supported by the device which
+                the ai resistance channel is available on
+                (this device being supposed to have the necessary signal conditioning to measure resistances)
+
+                Parameters
+                ----------
+                    ai_channel_param: Parameter
+                        the PyQtGraph parameter relative to the AI resistance channel
+            """
+            NI_module_name = ai_channel_param.name().split('_')[
+                0]  # the first part of these parameter name is supposed to always be the name (in the DAQmx system) of the NI module
+            resistance_range = self.controller.getAIResistanceRange(NI_module_name)
+            (ai_channel_param.child('resistance_settings', "min_val").
+             setValue(resistance_range[0]))
+            (ai_channel_param.child('resistance_settings', "max_val").
+             setValue(resistance_range[1]))
+
         if param.name() == 'NIDAQ_type':
             self.controller.update_NIDAQ_channels(param.value())
             if param.value() == ChannelType.ANALOG_INPUT.name:  # analog input
@@ -417,6 +437,10 @@ class DAQ_NIDAQmx_base:
             param.parent().child('voltage_settings').show(param.value() == UsageTypeAI.VOLTAGE.name)
             param.parent().child('current_settings').show(param.value() == UsageTypeAI.CURRENT.name)
             param.parent().child('resistance_settings').show(param.value() == UsageTypeAI.RESISTANCE.name)
+            if param.name() == 'ai_type' and param.value() == UsageTypeAI.RESISTANCE.name:
+                if param.parent().child('resistance_settings', "units").value() == ResistanceUnits.OHMS.name:
+                    ai_channel_param = param.parent()
+                    set_boundary_resist_expected_values_to_device_ranges(ai_channel_param)
             param.parent().child('thermoc_settings').show(param.value() == UsageTypeAI.TEMPERATURE_THERMOCOUPLE.name)
             param.parent().child('rtd_settings').show(param.value() == UsageTypeAI.TEMPERATURE_RTD.name)
 
@@ -425,6 +449,9 @@ class DAQ_NIDAQmx_base:
 
         elif param.name() == 'units' and param.parent().name() == 'resistance_settings':
             param.parent().child('custom_scale_name').show(param.value() == ResistanceUnits.FROM_CUSTOM_SCALE.name)
+            if param.value() == ResistanceUnits.OHMS.name:
+                ai_channel_param = param.parent().parent()
+                set_boundary_resist_expected_values_to_device_ranges(ai_channel_param)
 
         elif param.name() == 'ao_type':
             param.parent().child('voltage_settings').show(param.value() == UsageTypeAI.VOLTAGE.name)
