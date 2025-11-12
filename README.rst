@@ -47,7 +47,7 @@ NIDAQmx Viewer
 ++++++++++++++
 
 This viewer aims at being very general and allows measurement with as much different NI modules as possible.
-At this point (10/2025), it supports Analog measurement of currents, voltages and temperatures from thermocouples and RTD.
+At this point (10/2025), it supports Analog measurement of currents, resistance, voltages and temperatures from thermocouples and RTD.
 
 Tests have been running with the following devices:
     * Chassis NI cDAQ-9174 & NI USB-9162
