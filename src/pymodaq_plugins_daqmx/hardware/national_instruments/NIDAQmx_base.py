@@ -436,10 +436,10 @@ class DAQ_NIDAQmx_base:
         elif param.name() == 'ai_type':
             param.parent().child('voltage_settings').show(param.value() == UsageTypeAI.VOLTAGE.name)
             param.parent().child('current_settings').show(param.value() == UsageTypeAI.CURRENT.name)
-            param.parent().child('resistance_settings').show(param.value() == UsageTypeAI.RESISTANCE.name)
-            if param.name() == 'ai_type' and param.value() == UsageTypeAI.RESISTANCE.name:
+            if param.value() == UsageTypeAI.RESISTANCE.name:
+                param.parent().child('resistance_settings').show()
                 if param.parent().child('resistance_settings', "units").value() == ResistanceUnits.OHMS.name:
-                    ai_channel_param = param.parent()
+                    ai_channel_param = param.parent() # the ai channel paramater is supposed to be the parent of the ai type parameter
                     set_boundary_resist_expected_values_to_device_ranges(ai_channel_param)
             param.parent().child('thermoc_settings').show(param.value() == UsageTypeAI.TEMPERATURE_THERMOCOUPLE.name)
             param.parent().child('rtd_settings').show(param.value() == UsageTypeAI.TEMPERATURE_RTD.name)
@@ -450,7 +450,7 @@ class DAQ_NIDAQmx_base:
         elif param.name() == 'units' and param.parent().name() == 'resistance_settings':
             param.parent().child('custom_scale_name').show(param.value() == ResistanceUnits.FROM_CUSTOM_SCALE.name)
             if param.value() == ResistanceUnits.OHMS.name:
-                ai_channel_param = param.parent().parent()
+                ai_channel_param = param.parent().parent() # the ai channel paramater is supposed to be the parent of the ai type parameter
                 set_boundary_resist_expected_values_to_device_ranges(ai_channel_param)
 
         elif param.name() == 'ao_type':
