@@ -514,6 +514,20 @@ class NIDAQmx:
                                 ai_rtd_chan.ai_rtd_a = channel.a_cvd_coeff
                                 ai_rtd_chan.ai_rtd_b = channel.b_cvd_coeff
                                 ai_rtd_chan.ai_rtd_c = channel.c_cvd_coeff
+                        # elif channel.analog_type == UsageTypeAI.TEDS:
+                        #     teds_ai_rtd_chan = self._task.ai_channels.add_teds_ai_rtd_chan(channel.name,
+                        #                                                "",
+                        #                                                channel.value_min,
+                        #                                                channel.value_max,
+                        #                                                units=channel.units,
+                        #                                                resistance_config=channel.resistance_config,
+                        #                                            current_excit_source=channel.current_excit_source,
+                        #                                            current_excit_val=channel.current_excit_val)
+                        #     if teds_ai_rtd_chan.ai_rtd_type == RTDType["CUSTOM"]:
+                        #         # configuration of callendar-van dusen coefficients
+                        #         ai_rtd_chan.ai_rtd_a = channel.a_cvd_coeff
+                        #         ai_rtd_chan.ai_rtd_b = channel.b_cvd_coeff
+                        #         ai_rtd_chan.ai_rtd_c = channel.c_cvd_coeff
                     except DaqError as e:
                         err_code = e.error_code
                     if err_code:

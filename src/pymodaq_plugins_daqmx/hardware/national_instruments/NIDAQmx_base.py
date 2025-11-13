@@ -436,13 +436,38 @@ class DAQ_NIDAQmx_base:
         elif param.name() == 'ai_type':
             param.parent().child('voltage_settings').show(param.value() == UsageTypeAI.VOLTAGE.name)
             param.parent().child('current_settings').show(param.value() == UsageTypeAI.CURRENT.name)
+            param.parent().child('resistance_settings').show(param.value() == UsageTypeAI.RESISTANCE.name)
             if param.value() == UsageTypeAI.RESISTANCE.name:
-                param.parent().child('resistance_settings').show()
                 if param.parent().child('resistance_settings', "units").value() == ResistanceUnits.OHMS.name:
                     ai_channel_param = param.parent() # the ai channel paramater is supposed to be the parent of the ai type parameter
                     set_boundary_resist_expected_values_to_device_ranges(ai_channel_param)
             param.parent().child('thermoc_settings').show(param.value() == UsageTypeAI.TEMPERATURE_THERMOCOUPLE.name)
             param.parent().child('rtd_settings').show(param.value() == UsageTypeAI.TEMPERATURE_RTD.name)
+            if param.value() == UsageTypeAI.TEMPERATURE_RTD.name:
+                param.parent().child('rtd_settings', 'r0').show() #param.value() == UsageTypeAI.TEMPERATURE_RTD.name)
+                param.parent().child('rtd_settings', 'rtd_type').show() #param.value() == UsageTypeAI.TEMPERATURE_RTD.name)
+            elif param.value() == UsageTypeAI.TEDS.name:
+                ai_channel_param = param.parent()
+                complete_physical_channel_name = ai_channel_param.title()
+                NI_module_name = complete_physical_channel_name.split('/')[0]
+                NI_modules_list = nidaqmx.system.System.local().devices
+                NI_module = NI_modules_list[NI_modules_list.device_names.index(NI_module_name)]
+                AI_physical_channels_list = NI_module.ai_physical_chans
+                AI_physical_channel = AI_physical_channels_list[AI_physical_channels_list.channel_names.
+                                                                    index(complete_physical_channel_name)]
+                TEDS_template_ID = None
+                try:
+                    TEDS_template_ID = AI_physical_channel.teds_template_ids[0] # The channel is supposed to not have more than one TEDS file
+                except nidaqmx.DaqError as daq_err:
+                    if daq_err.error_code == -200709:
+                        logger.warning(f'No TEDS sensor was detected on the physical channel {complete_physical_channel_name}.')
+                    else:
+                        raise daq_err
+                is_RTD_TEDS_file = (TEDS_template_ID == 37)
+                param.parent().child('rtd_settings').show(is_RTD_TEDS_file)
+                if is_RTD_TEDS_file:  # 37 is the template ID for RTD sensors TEDS files : cf. https://www.ni.com/en/support/documentation/supplemental/06/ieee-1451-4-sensor-templates-overview.html
+                    param.parent().child('rtd_settings', 'r0').hide()
+                    param.parent().child('rtd_settings', 'rtd_type').hide()
 
         elif param.name() == 'rtd_type':
             param.parent().child('c-vd_coeff.').show(param.value() == RTDType.CUSTOM.name)
@@ -535,6 +560,30 @@ class DAQ_NIDAQmx_base:
                                                    current_excit_val=channel['rtd_settings', 'i_ex_value'],
                                                    r_0=channel['rtd_settings', 'r0'],
                                                    ))
+                # elif analog_type == UsageTypeAI.TEDS:
+                #     ai_channels_param = self.settings.child('ai_channels')
+                #     print(f'children : {ai_channels_param.children()}')
+                #     if ai_channels_param.children()[0].child('rtd_settings').opts['visible']:
+                #         print("channel ok")
+                #         channels.append(AI_RTD_Channel(name=channel.opts['title'],
+                #                                        source=source, analog_type=analog_type,
+                #                                        value_min=channel['rtd_settings', 'min_value_in'],
+                #                                        value_max=channel['rtd_settings', 'max_value_in'],
+                #                                        units=TemperatureUnits[channel['rtd_settings', 'temp_unit']],
+                #                                        a_cvd_coeff=channel[
+                #                                            'rtd_settings', 'c-vd_coeff.', 'a_c-vd_coeff'],
+                #                                        b_cvd_coeff=channel[
+                #                                            'rtd_settings', 'c-vd_coeff.', 'b_c-vd_coeff'],
+                #                                        c_cvd_coeff=channel[
+                #                                            'rtd_settings', 'c-vd_coeff.', 'c_c-vd_coeff'],
+                #                                        resistance_config=
+                #                                        ResistanceConfiguration[
+                #                                            channel['rtd_settings', 'resistance_config']],
+                #                                        current_excit_source=
+                #                                        ExcitationSource[channel['rtd_settings', 'current_excit_src']],
+                #                                        current_excit_val=channel['rtd_settings', 'i_ex_value'],
+                #                                        ))
+
 
         elif self.settings['NIDAQ_type'] == ChannelType.ANALOG_OUTPUT.name:  # analog output
             source = ChannelType.ANALOG_OUTPUT
