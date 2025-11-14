@@ -7,7 +7,7 @@ from pymodaq_gui.parameter.pymodaq_ptypes import registerParameterType, GroupPar
 from pymodaq_plugins_daqmx.hardware.national_instruments.daqmxni import (NIDAQmx, Edge, ChannelType, ClockSettings, \
     AIChannel, AIResistanceChannel, AIThermoChannel, AOChannel, CIChannel, COChannel, DOChannel, DIChannel, UsageTypeAI, UsageTypeAO, \
     ThermocoupleType, TerminalConfiguration, TriggerSettings,
-    RTDType, TemperatureUnits, ResistanceConfiguration, ExcitationSource , AI_RTD_Channel,
+    RTDType, TemperatureUnits, ResistanceConfiguration, ExcitationSource, AI_RTD_Channel,
     ResistanceUnits)
 
 
@@ -331,6 +331,25 @@ class DAQ_NIDAQmx_base:
         self.trigger_settings = None
         self.live = False
 
+    def is_TEDS_ai_channel_param(self, ai_channel_param, TEDS_template_ID):
+        complete_physical_channel_name = ai_channel_param.title()
+        NI_module_name = complete_physical_channel_name.split('/')[0]
+        NI_modules_list = nidaqmx.system.System.local().devices
+        NI_module = NI_modules_list[NI_modules_list.device_names.index(NI_module_name)]
+        AI_physical_channels_list = NI_module.ai_physical_chans
+        AI_physical_channel = AI_physical_channels_list[AI_physical_channels_list.channel_names.
+        index(complete_physical_channel_name)]
+        param_TEDS_template_ID = None
+        try:
+            param_TEDS_template_ID = AI_physical_channel.teds_template_ids[
+                0]  # The channel is supposed to not have more than one TEDS file
+        except nidaqmx.DaqError as daq_err:
+            if daq_err.error_code == -200709:
+                logger.warning(f'No TEDS sensor was detected on the physical channel {complete_physical_channel_name}.')
+            else:
+                raise daq_err
+        return (param_TEDS_template_ID == TEDS_template_ID)
+
     def commit_settings(self, param: Parameter):
         """
             Activate the parameters changes in the hardware.
@@ -444,28 +463,13 @@ class DAQ_NIDAQmx_base:
             param.parent().child('thermoc_settings').show(param.value() == UsageTypeAI.TEMPERATURE_THERMOCOUPLE.name)
             param.parent().child('rtd_settings').show(param.value() == UsageTypeAI.TEMPERATURE_RTD.name)
             if param.value() == UsageTypeAI.TEMPERATURE_RTD.name:
-                param.parent().child('rtd_settings', 'r0').show() #param.value() == UsageTypeAI.TEMPERATURE_RTD.name)
-                param.parent().child('rtd_settings', 'rtd_type').show() #param.value() == UsageTypeAI.TEMPERATURE_RTD.name)
+                param.parent().child('rtd_settings', 'r0').show()
+                param.parent().child('rtd_settings', 'rtd_type').show()
             elif param.value() == UsageTypeAI.TEDS.name:
                 ai_channel_param = param.parent()
-                complete_physical_channel_name = ai_channel_param.title()
-                NI_module_name = complete_physical_channel_name.split('/')[0]
-                NI_modules_list = nidaqmx.system.System.local().devices
-                NI_module = NI_modules_list[NI_modules_list.device_names.index(NI_module_name)]
-                AI_physical_channels_list = NI_module.ai_physical_chans
-                AI_physical_channel = AI_physical_channels_list[AI_physical_channels_list.channel_names.
-                                                                    index(complete_physical_channel_name)]
-                TEDS_template_ID = None
-                try:
-                    TEDS_template_ID = AI_physical_channel.teds_template_ids[0] # The channel is supposed to not have more than one TEDS file
-                except nidaqmx.DaqError as daq_err:
-                    if daq_err.error_code == -200709:
-                        logger.warning(f'No TEDS sensor was detected on the physical channel {complete_physical_channel_name}.')
-                    else:
-                        raise daq_err
-                is_RTD_TEDS_file = (TEDS_template_ID == 37)
-                param.parent().child('rtd_settings').show(is_RTD_TEDS_file)
-                if is_RTD_TEDS_file:  # 37 is the template ID for RTD sensors TEDS files : cf. https://www.ni.com/en/support/documentation/supplemental/06/ieee-1451-4-sensor-templates-overview.html
+                is_RTD_TEDS_channel = self.is_TEDS_ai_channel_param(ai_channel_param = ai_channel_param,TEDS_template_ID = 37) # 37 is the template ID for RTD sensors TEDS files : cf. https://www.ni.com/en/support/documentation/supplemental/06/ieee-1451-4-sensor-templates-overview.html
+                param.parent().child('rtd_settings').show(is_RTD_TEDS_channel)
+                if is_RTD_TEDS_channel:
                     param.parent().child('rtd_settings', 'r0').hide()
                     param.parent().child('rtd_settings', 'rtd_type').hide()
 
@@ -560,29 +564,20 @@ class DAQ_NIDAQmx_base:
                                                    current_excit_val=channel['rtd_settings', 'i_ex_value'],
                                                    r_0=channel['rtd_settings', 'r0'],
                                                    ))
-                # elif analog_type == UsageTypeAI.TEDS:
-                #     ai_channels_param = self.settings.child('ai_channels')
-                #     print(f'children : {ai_channels_param.children()}')
-                #     if ai_channels_param.children()[0].child('rtd_settings').opts['visible']:
-                #         print("channel ok")
-                #         channels.append(AI_RTD_Channel(name=channel.opts['title'],
-                #                                        source=source, analog_type=analog_type,
-                #                                        value_min=channel['rtd_settings', 'min_value_in'],
-                #                                        value_max=channel['rtd_settings', 'max_value_in'],
-                #                                        units=TemperatureUnits[channel['rtd_settings', 'temp_unit']],
-                #                                        a_cvd_coeff=channel[
-                #                                            'rtd_settings', 'c-vd_coeff.', 'a_c-vd_coeff'],
-                #                                        b_cvd_coeff=channel[
-                #                                            'rtd_settings', 'c-vd_coeff.', 'b_c-vd_coeff'],
-                #                                        c_cvd_coeff=channel[
-                #                                            'rtd_settings', 'c-vd_coeff.', 'c_c-vd_coeff'],
-                #                                        resistance_config=
-                #                                        ResistanceConfiguration[
-                #                                            channel['rtd_settings', 'resistance_config']],
-                #                                        current_excit_source=
-                #                                        ExcitationSource[channel['rtd_settings', 'current_excit_src']],
-                #                                        current_excit_val=channel['rtd_settings', 'i_ex_value'],
-                #                                        ))
+                elif analog_type == UsageTypeAI.TEDS:
+                    if self.is_TEDS_ai_channel_param(ai_channel_param = channel,TEDS_template_ID = 37): # 37 is the template ID for RTD sensors TEDS files : cf. https://www.ni.com/en/support/documentation/supplemental/06/ieee-1451-4-sensor-templates-overview.html
+                        channels.append(AI_RTD_Channel(name=channel.opts['title'],
+                                                       source=source, analog_type=analog_type,
+                                                       value_min=channel['rtd_settings', 'min_value_in'],
+                                                       value_max=channel['rtd_settings', 'max_value_in'],
+                                                       units=TemperatureUnits[channel['rtd_settings', 'temp_unit']],
+                                                       resistance_config=
+                                                       ResistanceConfiguration[
+                                                           channel['rtd_settings', 'resistance_config']],
+                                                       current_excit_source=
+                                                       ExcitationSource[channel['rtd_settings', 'current_excit_src']],
+                                                       current_excit_val=channel['rtd_settings', 'i_ex_value'],
+                                                       ))
 
 
         elif self.settings['NIDAQ_type'] == ChannelType.ANALOG_OUTPUT.name:  # analog output
