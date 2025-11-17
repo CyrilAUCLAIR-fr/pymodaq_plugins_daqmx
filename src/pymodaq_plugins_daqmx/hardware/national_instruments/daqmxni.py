@@ -120,7 +120,6 @@ class AI_RTD_Channel(AIChannel):
         assert rtd_type in RTDType
         self.rtd_type = rtd_type
         # coefficients of the Callendar-Van Dusen Equation (for "CUSTOM" RTD probes) --
-        print(f"a_cvd_coeff = {a_cvd_coeff}, type(a_cvd_coeff) = {type(a_cvd_coeff)}")
         assert type(a_cvd_coeff) in [float, int]
         self.a_cvd_coeff = a_cvd_coeff
         assert type(b_cvd_coeff) in [float, int]
@@ -483,25 +482,6 @@ class NIDAQmx:
             else:
                 raise daq_err
         return TEDS_template_ID
-
-    def is_TEDS_ai_channel_param(self, ai_channel_param, TEDS_template_ID):
-        complete_physical_channel_name = ai_channel_param.title()
-        NI_module_name = complete_physical_channel_name.split('/')[0]
-        NI_modules_list = niSystem.local().devices
-        NI_module = NI_modules_list[NI_modules_list.device_names.index(NI_module_name)]
-        AI_physical_channels_list = NI_module.ai_physical_chans
-        AI_physical_channel = AI_physical_channels_list[AI_physical_channels_list.channel_names.
-        index(complete_physical_channel_name)]
-        param_TEDS_template_ID = None
-        try:
-            param_TEDS_template_ID = AI_physical_channel.teds_template_ids[
-                0]  # The channel is supposed to not have more than one TEDS file
-        except DaqError as daq_err:
-            if daq_err.error_code == -200709:
-                logger.warning(f'No TEDS sensor was detected on the physical channel {complete_physical_channel_name}.')
-            else:
-                raise daq_err
-        return (param_TEDS_template_ID == TEDS_template_ID)
 
     def update_task(self, channels=[], clock_settings=ClockSettings(), trigger_settings=TriggerSettings()):
 

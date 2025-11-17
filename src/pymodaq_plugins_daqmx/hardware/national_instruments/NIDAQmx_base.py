@@ -332,22 +332,9 @@ class DAQ_NIDAQmx_base:
         self.live = False
 
     def is_TEDS_ai_channel_param(self, ai_channel_param, TEDS_template_ID):
+        # For the moment, all virtual channel is supposed to have the same name as its physical channel.
         complete_physical_channel_name = ai_channel_param.title()
-        NI_module_name = complete_physical_channel_name.split('/')[0]
-        NI_modules_list = nidaqmx.system.System.local().devices
-        NI_module = NI_modules_list[NI_modules_list.device_names.index(NI_module_name)]
-        AI_physical_channels_list = NI_module.ai_physical_chans
-        AI_physical_channel = AI_physical_channels_list[AI_physical_channels_list.channel_names.
-        index(complete_physical_channel_name)]
-        param_TEDS_template_ID = None
-        try:
-            param_TEDS_template_ID = AI_physical_channel.teds_template_ids[
-                0]  # The channel is supposed to not have more than one TEDS file
-        except nidaqmx.DaqError as daq_err:
-            if daq_err.error_code == -200709:
-                logger.warning(f'No TEDS sensor was detected on the physical channel {complete_physical_channel_name}.')
-            else:
-                raise daq_err
+        param_TEDS_template_ID = self.controller.TEDS_template_ID(complete_physical_channel_name)
         return (param_TEDS_template_ID == TEDS_template_ID)
 
     def commit_settings(self, param: Parameter):
