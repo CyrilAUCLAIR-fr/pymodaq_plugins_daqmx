@@ -120,6 +120,7 @@ class AI_RTD_Channel(AIChannel):
         assert rtd_type in RTDType
         self.rtd_type = rtd_type
         # coefficients of the Callendar-Van Dusen Equation (for "CUSTOM" RTD probes) --
+        print(f"a_cvd_coeff = {a_cvd_coeff}, type(a_cvd_coeff) = {type(a_cvd_coeff)}")
         assert type(a_cvd_coeff) in [float, int]
         self.a_cvd_coeff = a_cvd_coeff
         assert type(b_cvd_coeff) in [float, int]
@@ -394,6 +395,26 @@ class NIDAQmx:
                                                                    current_excit_source=current_excit_source,
                                                                    current_excit_val=current_excit_val,
                                                                    ))
+                                elif analog_type == UsageTypeAI.TEDS :
+                                    print(f'ch : {name}')
+                                    if self.TEDS_template_ID(name) == 37: # 37 is TEDS template ID for RTD measurements
+                                        units = TemperatureUnits[ai[ch].get("units")]
+                                        resistance_config = ResistanceConfiguration[ai[ch].get("resistance_config")]
+                                        current_excit_source = ExcitationSource[ai[ch].get("current_excit_source")]
+                                        current_excit_val = float(ai[ch].get("current_excit_val"))
+                                        viewer.config_channels.append(AI_RTD_Channel
+                                                                      (name=name,
+                                                                       source=source,
+                                                                       analog_type=analog_type,
+                                                                       value_min=float(ai[ch].get("value_min")),
+                                                                       value_max=float(ai[ch].get("value_max")),
+                                                                       units=units,
+                                                                       resistance_config=resistance_config,
+                                                                       current_excit_source=current_excit_source,
+                                                                       current_excit_val=current_excit_val,
+                                                                       ))
+                                        print(f'viewer.config_channels : {viewer.config_channels}')
+
             logger.info("Devices from config: {}".format(viewer.config_devices))
             logger.info("Modules from config: {}".format(viewer.config_modules))
             logger.info("Channels from config: {}".format([ch.name for ch in viewer.config_channels]))
@@ -440,6 +461,28 @@ class NIDAQmx:
                 if channels != ['']:
                     sources.extend(channels)
         return sources
+
+    def TEDS_template_ID(self, channel_name):
+        # Returns the TEDS template_ID of the channel named "channel_name" if a TEDS sensor is detected on.
+        # Otherwise, returns None.
+
+        # For the moment, all virtual channel is supposed to have the same name as its physical channel.
+        NI_module_name = channel_name.split('/')[0]
+        NI_modules_list = niSystem.local().devices
+        NI_module = NI_modules_list[NI_modules_list.device_names.index(NI_module_name)]
+        AI_physical_channels_list = NI_module.ai_physical_chans
+        AI_physical_channel = AI_physical_channels_list[AI_physical_channels_list.channel_names.
+        index(channel_name)]
+        TEDS_template_ID = None
+        try:
+            TEDS_template_ID = AI_physical_channel.teds_template_ids[
+                0]  # The channel is supposed to not have more than one TEDS file
+        except DaqError as daq_err:
+            if daq_err.error_code == -200709:
+                logger.warning(f'No TEDS sensor was detected on the physical channel {channel_name}.')
+            else:
+                raise daq_err
+        return TEDS_template_ID
 
     def is_TEDS_ai_channel_param(self, ai_channel_param, TEDS_template_ID):
         complete_physical_channel_name = ai_channel_param.title()
